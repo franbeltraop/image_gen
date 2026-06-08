@@ -1,6 +1,4 @@
- #%%
 from diffusers import StableDiffusionImg2ImgPipeline, EulerAncestralDiscreteScheduler
-from diffusers import DiffusionPipeline
 import torch
 from PIL import Image
 import os
@@ -8,17 +6,23 @@ import os
 # =========================
 # Config
 # =========================
-MODEL_ID = "sd-research/stable-diffusion-2-1-base"
-INPUT_IMAGE_PATH = "custom_dataset/base_image.webp"
+MODEL_ID = "stabilityai/stable-diffusion-2-1-base"
+INPUT_IMAGE_PATH = "custom_dataset/sneaker1.jpg"
 OUTPUT_DIR = "outputs_variations"
-PROMPT = "A futuristic version of the product with neon accents and a dark background"
+
+# 2 prompts
+PROMPTS = [
+    "A futuristic version of the sneakers with neon accents and a dark background",
+    "A luxury product photo of sneakers in a studio with soft lighting, ultra realistic"
+]
+
+NUM_IMAGES_PER_PROMPT = 5  # 2 prompts × 5 = 10 imagens ✅
 
 GUIDANCE_SCALE = 7.5
 NUM_INFERENCE_STEPS = 30
-STRENGTH = 0.7  # controla o quanto a imagem muda (0.3 = pouco, 0.8 = muito)
-NUM_IMAGES = 3
-#%%
-# Create output folder
+STRENGTH = 0.7
+
+# Create folder
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # =========================
@@ -31,33 +35,40 @@ pipe = StableDiffusionImg2ImgPipeline.from_pretrained(
     torch_dtype=torch.float16 if device == "cuda" else torch.float32
 )
 
-# Set scheduler
 pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(pipe.scheduler.config)
-
 pipe.to(device)
 
-print(f"Using device: {device}")
-#%%
 # =========================
 # Load base image
 # =========================
 init_image = Image.open(INPUT_IMAGE_PATH).convert("RGB")
-init_image = init_image.resize((768, 768)) 
+init_image = init_image.resize((768, 768))
+
+print(f"Using device: {device}")
 
 # =========================
-# Generate variations
+# Generate images
 # =========================
-for i in range(NUM_IMAGES):
+image_counter = 1
 
-    image = pipe(
-        prompt=PROMPT,
-        image=init_image,
-        strength=STRENGTH,
-        guidance_scale=GUIDANCE_SCALE,
-        num_inference_steps=NUM_INFERENCE_STEPS
-    ).images[0]
+for prompt in PROMPTS:
+    for i in range(NUM_IMAGES_PER_PROMPT):
 
-    output_path = os.path.join(OUTPUT_DIR, f"variation_{i+1}.png")
-    image.save(output_path)
+        image = pipe(
+            prompt=prompt,
+            image=init_image,
+            strength=STRENGTH,
+            guidance_scale=GUIDANCE_SCALE,
+            num_inference_steps=NUM_INFERENCE_STEPS
+        ).images[0]
 
-    print(f"Saved: {output_path}")
+        output_path = os.path.join(
+            OUTPUT_DIR,
+            f"img_{image_counter}.png"
+        )
+
+        image.save(output_path)
+        print(f"Saved: {output_path}")
+
+        image_counter += 1
+
