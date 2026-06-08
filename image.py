@@ -1,4 +1,6 @@
+ #%%
 from diffusers import StableDiffusionImg2ImgPipeline, EulerAncestralDiscreteScheduler
+from diffusers import DiffusionPipeline
 import torch
 from PIL import Image
 import os
@@ -6,17 +8,16 @@ import os
 # =========================
 # Config
 # =========================
-MODEL_ID = "stabilityai/stable-diffusion-2-1-base"
-INPUT_IMAGE_PATH = "custom_dataset/base_image.png"  # sua imagem base
+MODEL_ID = "sd-research/stable-diffusion-2-1-base"
+INPUT_IMAGE_PATH = "custom_dataset/base_image.webp"
 OUTPUT_DIR = "outputs_variations"
-
 PROMPT = "A futuristic version of the product with neon accents and a dark background"
 
 GUIDANCE_SCALE = 7.5
 NUM_INFERENCE_STEPS = 30
 STRENGTH = 0.7  # controla o quanto a imagem muda (0.3 = pouco, 0.8 = muito)
 NUM_IMAGES = 3
-
+#%%
 # Create output folder
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
@@ -36,12 +37,12 @@ pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(pipe.scheduler.conf
 pipe.to(device)
 
 print(f"Using device: {device}")
-
+#%%
 # =========================
 # Load base image
 # =========================
 init_image = Image.open(INPUT_IMAGE_PATH).convert("RGB")
-init_image = init_image.resize((768, 768))  # tamanho padrão para SD 2.1
+init_image = init_image.resize((768, 768)) 
 
 # =========================
 # Generate variations
